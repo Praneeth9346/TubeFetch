@@ -55,3 +55,51 @@ if url:
                     st.error(f"Download Failed: {result}")
             except Exception as e:
                 st.error(f"An unexpected error occurred: {e}")
+
+# ... (Previous code remains the same until the button) ...
+        
+        # 2. Download Button
+        if st.button("⬇️ Download High Quality MP4"):
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+
+            # Define a callback to update the progress bar
+            def progress_hook(d):
+                if d['status'] == 'downloading':
+                    try:
+                        p = d.get('_percent_str', '0%').replace('%','')
+                        progress_bar.progress(float(p) / 100)
+                        status_text.text(f"Processing on Server: {d.get('_percent_str')} ...")
+                    except:
+                        pass
+                if d['status'] == 'finished':
+                    progress_bar.progress(1.0)
+                    status_text.text("✅ Server Download Complete! Preparing file for you...")
+
+            try:
+                # Run the download logic
+                result = downloader.download_video(url, progress_hook)
+                
+                if result == "Success":
+                    # FIND THE FILE: Since we don't know the exact sanitized filename, 
+                    # we look for the most recently created mp4 in the downloads folder.
+                    files = [os.path.join("downloads", f) for f in os.listdir("downloads") if f.endswith(".mp4")]
+                    if not files:
+                        st.error("File not found on server.")
+                    else:
+                        latest_file = max(files, key=os.path.getctime)
+                        file_name = os.path.basename(latest_file)
+                        
+                        # CREATE DOWNLOAD BUTTON
+                        with open(latest_file, "rb") as f:
+                            st.download_button(
+                                label="⬇️ Click Here to Save to Your Computer",
+                                data=f,
+                                file_name=file_name,
+                                mime="video/mp4"
+                            )
+                        st.success("Ready! Click the button above to save.")
+                else:
+                    st.error(f"Server Download Failed: {result}")
+            except Exception as e:
+                st.error(f"An unexpected error occurred: {e}")
