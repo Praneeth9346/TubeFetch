@@ -30,36 +30,8 @@ if url:
             st.caption(f"👀 Views: {info['views']:,} | ⏳ Duration: {info['duration']}s")
             
         # 2. Download Button
-        if st.button("⬇️ Download High Quality MP4"):
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-
-            def progress_hook(d):
-                if d['status'] == 'downloading':
-                    try:
-                        p = d.get('_percent_str', '0%').replace('%','')
-                        progress_bar.progress(float(p) / 100)
-                        status_text.text(f"Downloading: {d.get('_percent_str')} ...")
-                    except:
-                        pass
-                if d['status'] == 'finished':
-                    progress_bar.progress(1.0)
-                    status_text.text("✅ Download Complete! Processing...")
-
-            try:
-                result = downloader.download_video(url, progress_hook)
-                if result == "Success":
-                    st.success(f"🎉 Video saved to: `{os.path.abspath('downloads')}`")
-                    st.balloons()
-                else:
-                    st.error(f"Download Failed: {result}")
-            except Exception as e:
-                st.error(f"An unexpected error occurred: {e}")
-
-# ... (Previous code remains the same until the button) ...
-        
-        # 2. Download Button
-        if st.button("⬇️ Download High Quality MP4"):
+        # Added a unique key to prevent duplicate ID errors
+        if st.button("⬇️ Download High Quality MP4", key="download_main_btn"):
             progress_bar = st.progress(0)
             status_text = st.empty()
 
@@ -81,8 +53,7 @@ if url:
                 result = downloader.download_video(url, progress_hook)
                 
                 if result == "Success":
-                    # FIND THE FILE: Since we don't know the exact sanitized filename, 
-                    # we look for the most recently created mp4 in the downloads folder.
+                    # FIND THE FILE: Look for the most recently created mp4
                     files = [os.path.join("downloads", f) for f in os.listdir("downloads") if f.endswith(".mp4")]
                     if not files:
                         st.error("File not found on server.")
@@ -90,13 +61,14 @@ if url:
                         latest_file = max(files, key=os.path.getctime)
                         file_name = os.path.basename(latest_file)
                         
-                        # CREATE DOWNLOAD BUTTON
+                        # CREATE DOWNLOAD BUTTON (Browser Download)
                         with open(latest_file, "rb") as f:
                             st.download_button(
                                 label="⬇️ Click Here to Save to Your Computer",
                                 data=f,
                                 file_name=file_name,
-                                mime="video/mp4"
+                                mime="video/mp4",
+                                key="browser_download_btn" # Unique key for the second button
                             )
                         st.success("Ready! Click the button above to save.")
                 else:
